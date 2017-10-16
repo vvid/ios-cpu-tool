@@ -17,11 +17,14 @@ class ViewController: UIViewController, UITextFieldDelegate {
     var started: Bool = false
     var numThreads: Int = 1
     let maxThreads: Int = 6
+    var numCpuCores : Int = 1
+    var actCpuCores : Int = 1
 
     func textFieldDidEndEditing(_ sender: UITextField) {
         if let val = Int(sender.text!)
         {
-          numThreads = min(max(val, 1), maxThreads)
+          numThreads = min(max(val, 1), numCpuCores)
+          sender.text = String(numThreads)
         }
     }
 
@@ -58,7 +61,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         var str: String = ""
         for i in 1...numThreads
         {
-            str = str + "Core " + String(i) + ": " + String(Int(threadTimes[i-1] / 1000000)) + "Mhz\n"
+            str = str + "Core " + String(i) + ": " + String(Int(threadTimes[i-1] / 1000000)) + "MHz\n"
         }
 
         textOutput.text = str
@@ -66,6 +69,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         textFieldThreads.delegate = self
+        numCpuCores = ProcessInfo.processInfo.processorCount
+        actCpuCores = ProcessInfo.processInfo.activeProcessorCount
+        textOutput.text = "Cores: " + String(numCpuCores) + "\nActive Cores: " + String(actCpuCores)
     }
 
     override func didReceiveMemoryWarning() {
