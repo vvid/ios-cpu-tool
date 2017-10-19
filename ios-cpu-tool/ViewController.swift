@@ -42,7 +42,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
 
     func freqInMHz(_ freq: Double) -> String {
-      return String(Int(freq / 1000000))
+      return String(Int((freq + 500000) / 1000000))
     }
 
     @IBAction func startFreqCalc(_ sender: UIButton) {
