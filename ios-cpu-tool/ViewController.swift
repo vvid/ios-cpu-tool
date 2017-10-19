@@ -19,6 +19,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     let maxThreads: Int = 6
     var numCpuCores : Int = 1
     var actCpuCores : Int = 1
+    var runThreads : Int = 0
 
     func textFieldDidEndEditing(_ sender: UITextField) {
         if let val = Int(sender.text!)
@@ -40,12 +41,16 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
+    func freqInMHz(_ freq: Double) -> String {
+      return String(Int(freq / 1000000))
+    }
+
     @IBAction func startFreqCalc(_ sender: UIButton) {
 
         warmup();
 
-        var threadTimes = [Double](repeating: 0.0, count: maxThreads)
-
+        //var threadTimes = [Double](repeating: 0.0, count: maxThreads)
+        /*
         let group = DispatchGroup()
         let queue = DispatchQueue.global(qos: .userInteractive)
         for i in 1...numThreads
@@ -57,15 +62,32 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
         _ = group.wait(timeout: DispatchTime.distantFuture)
 
-
-        var str: String = ""
-        for i in 1...numThreads
+ */
+        if (started)
         {
-            str = str + "Core " + String(i) + ": " + String(Int(threadTimes[i-1] / 1000000)) + "MHz\n"
-        }
+          started = false
+          stop_threads()
+          sender.setTitle("Get CPU freq", for: .normal)
 
-        textOutput.text = str
+            var str: String = ""
+            for i in 1...runThreads
+            {
+                str = str + "Core " + String(i) + ": " + freqInMHz(get_thread_freq(Int32(i-1))) + "MHz ("
+                                                       + freqInMHz(get_thread_min_freq(Int32(i-1))) + " - "
+                                                       + freqInMHz(get_thread_max_freq(Int32(i-1))) + ")\n"
+            }
+
+            textOutput.text = str
+        }
+        else
+        {
+          runThreads = numThreads
+          start_threads(Int32(numThreads))
+          started = true
+          sender.setTitle("Stop", for: .normal)
+        }
     }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         textFieldThreads.delegate = self
