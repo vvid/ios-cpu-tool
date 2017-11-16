@@ -42,12 +42,12 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
 
     func freqInMHz(_ freq: Double) -> String {
-      return String(Int((freq + 500000) / 1000000))
+      return String(Int((freq + 499999) / 1000000))
     }
 
     @IBAction func startFreqCalc(_ sender: UIButton) {
 
-        warmup();
+ //       warmup();
 
         //var threadTimes = [Double](repeating: 0.0, count: maxThreads)
         /*
@@ -72,19 +72,19 @@ class ViewController: UIViewController, UITextFieldDelegate {
             var str: String = ""
             for i in 1...runThreads
             {
-                str = str + "Core " + String(i) + ": " + freqInMHz(get_thread_freq(Int32(i-1))) + "MHz ("
-                                                       + freqInMHz(get_thread_min_freq(Int32(i-1))) + " - "
-                                                       + freqInMHz(get_thread_max_freq(Int32(i-1))) + ")\n"
+                str = str + "Core " + String(i) + ": " + freqInMHz(get_thread_freq(Int32(i-1))) + "MHz (id="
+                                                       + freqInMHz(get_thread_min_freq(Int32(i-1))) + " +"
+                                                       + freqInMHz(get_thread_max_freq(Int32(i-1))) + "ms)\n"
             }
 
             textOutput.text = str
         }
         else
         {
-          runThreads = numThreads
-          start_threads(Int32(numThreads))
-          started = true
           sender.setTitle("Stop", for: .normal)
+          runThreads = numThreads
+          start_threads(Int32(numThreads), 1000)
+          started = true
         }
     }
 
