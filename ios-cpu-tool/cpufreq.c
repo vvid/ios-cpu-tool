@@ -46,6 +46,8 @@
 
 #define N (80 * 1000 * 100U)
 
+#define countof(arr) (sizeof(arr) / sizeof(arr[0]))
+
 //asm prototypes
 extern void dummy_call(void);
 extern void* calibration(void);
@@ -75,52 +77,13 @@ double hpctime_to_ns(uint64_t time)
   return ((double)time * timebase_double);
 }
 
+double hpctime_to_ms(uint64_t time)
+{
+  return hpctime_to_ns(time) / 1000000.0;
+}
 double hpctime_to_s(uint64_t time)
 {
   return hpctime_to_ns(time) / 1000000000.0;
-}
-
-#define countof(arr) (sizeof(arr) / sizeof(arr[0]))
-
-
-uint64_t timescale = 1;
-uint64_t min_overhead = ~0;
-uint64_t start_of_time = 0;
-
-void warmup()
-{
-  cpu_workload(INITIAL_WARMUP);
-
-  int i;
-  for (i = 0; i < CALIB_ATTEMPTS; i++)
-  {
-    uint64_t tb, te;
-    tb = hpctime();
-    dummy_call();
-    te = hpctime();
-
-    //FIXME: access from multiple threads
-    if (min_overhead > te - tb)
-        min_overhead = te - tb;
-  }
-};
-
-double measure_freq()
-{
-    uint64_t tb, te;
-    uint64_t min_time = ~0;
-
-    for (int i = 0; i < CALIB_ATTEMPTS; i++)
-    {
-        tb = hpctime();
-        calib_seq_add(CALIB_UNROLL * CALIB_REPEAT);
-        te = hpctime();
-        if (min_time > te - tb)
-            min_time = te - tb;
-    }
-    if (min_time > min_overhead)
-      min_time -= min_overhead;
-    return CALIB_UNROLL * CALIB_REPEAT / hpctime_to_s(min_time);
 }
 
 uint32_t mem[256];
@@ -141,11 +104,31 @@ int cpu_workload(int iterations)
     return (int)fi + mem[0];
 };
 
+struct DataPoint
+{
+    int value;
+    int distance;
+    int index;
+    int cluster;
+};
+
+struct Cluster
+{
+  int ref_value;
+  int min_value;
+  int max_value;
+  int count;
+  int done;
+  int min_idx;
+  int max_idx;
+};
+
 struct FreqPoint
 {
     int freq;
     int signature;
     int count;
+    uint64_t time;
 };
 
 struct FreqSample
@@ -168,17 +151,50 @@ double measure_thread_max_freq[MAX_THREADS];
 struct FreqSample filtered_samples[MAX_THREADS][NUM_FREQ_SAMPLES];
 struct FreqPoint frequency_points[NUM_FREQ_POINTS];
 
+struct DataPoint data_pnts_in[NUM_FREQ_POINTS];
+struct DataPoint data_pnts[NUM_FREQ_POINTS];
+struct Cluster clusters[NUM_FREQ_POINTS];
+
+int thread_sample_index[MAX_THREADS];
+
 struct FreqSample *thread_samples;
 struct FreqSample *thread_samples_aligned;
-int thread_sample_index[MAX_THREADS];
 int num_thread_samples = 1000;
 int num_thread_samples_aligned = 1000;
 
 int num_freq_points = 0;
 int num_threads = 0;
 int thread_stop_event = 0;
-
 int thread_lock_var = 0;
+
+uint64_t timescale = 1;
+uint64_t min_overhead = ~0;
+uint64_t start_of_time = 0;
+
+//Freq measurement state
+
+struct CpuClusterInfo
+{
+  int min_freq;
+  int max_freq;
+  int signature;
+};
+
+struct CpuCoreInfo
+{
+  int max_freq;
+
+  //caches
+
+
+};
+
+struct CpuClusterInfo cpu_clusters[MAX_THREADS];
+struct CpuCoreInfo    cpu_cores[MAX_THREADS];
+
+//------------------------------------------
+//
+
 
 int time_from_start_ms(uint64_t time)
 {
@@ -216,14 +232,49 @@ int intersect(uint64_t al, uint64_t ar, uint64_t bl, uint64_t br)
           (bl < al && br > ar));
 }
 
+//delta between high-low is less than (100/tolerance)% of high
+int check_tolerance(int high, int low, int tolerance)
+{
+  return (abs(high - low) * tolerance < high) ? 1 : 0;
+}
+
 void dump_freq_points()
 {
     for (int i = 0; i<num_freq_points; i++)
     {
-        printf("fp %d f:%d s:%d c:%d\n", i,
+        printf("fp %d f:%d s:%d t:%f ms c:%d\n", i,
                frequency_points[i].freq,
                frequency_points[i].signature,
+               hpctime_to_ms(frequency_points[i].time),
                frequency_points[i].count);
+    }
+}
+
+void dump_data_points(struct DataPoint *dp, int count)
+{
+    for (int i = 0; i<count; i++)
+    {
+        printf("dp %d v:%d d:%d i:%d c:%d\n", i,
+               dp[i].value,
+               dp[i].distance,
+               dp[i].index,
+               dp[i].cluster);
+    }
+}
+
+void dump_clusters(struct Cluster *clusters, int count)
+{
+    for (int i = 0; i<count; i++)
+    {
+        if (clusters[i].count == 0)
+          continue;
+        printf("cluster %d f:%d (%d-%d) cnt:%d <i:%d i:%d>\n", i,
+               clusters[i].ref_value,
+               clusters[i].min_value,
+               clusters[i].max_value,
+               clusters[i].count,
+               clusters[i].min_idx,
+               clusters[i].max_idx);
     }
 }
 
@@ -263,16 +314,140 @@ int freq_comp(const void *a, const void *b)
     return 0;
 }
 
-int freq_point_comp(const void *a, const void *b)
+int fpoint_sig_comp(const void *a, const void *b)
 {
     struct FreqPoint *as = (struct FreqPoint*)a;
     struct FreqPoint *bs = (struct FreqPoint*)b;
-    if (as->signature < bs->signature && as->freq > bs->freq) return -1;
-    if (as->signature > bs->signature && as->freq < bs->freq) return  1;
+    if (as->signature < bs->signature) return -1;
+    if (as->signature > bs->signature) return  1;
     return 0;
 }
 
-// align samples, strip first/last
+int dpoint_up_comp(const void *a, const void *b)
+{
+    struct DataPoint *as = (struct DataPoint*)a;
+    struct DataPoint *bs = (struct DataPoint*)b;
+    if (as->value < bs->value) return -1;
+    if (as->value > bs->value) return  1;
+    return 0;
+}
+
+int freq_valid_samples_list[NUM_FREQ_SAMPLES];
+int freq_valid_samples_list_count = 0;
+
+void calc_distance(struct DataPoint *dp, int num_points)
+{
+    dp[0].distance = abs(dp[1].value - dp[0].value);
+    for (int i=1; i<num_points-1; i++)
+    {
+        dp[i].distance = max(abs(dp[i-1].value - dp[i].value),
+                             abs(dp[i+1].value - dp[i].value));
+    }
+    dp[num_points-1].distance = abs(dp[num_points-2].value - dp[num_points-1].value);
+}
+
+#define SIG_CLUSTER_MERGE_TOLERANCE (100/5)
+
+int clusterize(struct DataPoint *dp, int num_points)
+{
+    for (int i=0; i<num_freq_points; i++)
+    {
+        dp[i].distance = 0;
+        dp[i].index = i;
+        dp[i].cluster = -1;
+    }
+
+    qsort(dp, num_points, sizeof(struct DataPoint), dpoint_up_comp);
+
+    calc_distance(dp, num_points);
+
+    //create clusters
+
+    int num_clusters = 0;
+    for (int p=0; p<num_points; p++)
+    {
+        int found = 0;
+        for (int c=0; c<num_clusters; c++)
+        {
+            if (dp[p].value == clusters[c].max_value) // &&
+ //               dp[p].distance == 0)
+            {
+              found = 1;
+              clusters[c].count++;
+              clusters[c].min_idx = min(p, clusters[c].min_idx);
+              clusters[c].max_idx = max(p, clusters[c].max_idx);
+              dp[p].cluster = c;
+            }
+        }
+
+        if (!found) // && dp[p].distance == 0)
+        {
+            clusters[num_clusters].count = 1;
+            clusters[num_clusters].ref_value = dp[p].value;
+            clusters[num_clusters].min_value = dp[p].value;
+            clusters[num_clusters].max_value = dp[p].value;
+            clusters[num_clusters].min_idx = p;
+            clusters[num_clusters].max_idx = p;
+            clusters[num_clusters].done = 0;
+            num_clusters++;
+        }
+    }
+
+    printf("clusterize: data points\n");
+    dump_data_points(dp, num_points);
+    
+    printf("clusterize: create clusters\n");
+    dump_clusters(clusters, num_clusters);
+
+    //merge clusters
+    while (1)
+    {
+      //find max
+      int maxcnt = 0;
+      int to = -1;
+      for (int c=0; c<num_clusters; c++)
+      {
+        if (maxcnt < clusters[c].count && clusters[c].done == 0)
+        {
+          maxcnt = clusters[c].count;
+          to = c;
+        }
+      }
+
+      if (to < 0)
+        break;
+
+      int merged = 0;
+      for (int c=0; c<num_clusters; c++)
+      {
+        if (c != to &&
+            clusters[c].count > 0 &&
+            clusters[c].done == 0 &&
+            check_tolerance(clusters[to].ref_value, clusters[c].ref_value, SIG_CLUSTER_MERGE_TOLERANCE))
+        {
+          clusters[to].count += clusters[c].count;
+          clusters[to].min_value = min(clusters[to].min_value, clusters[c].min_value); 
+          clusters[to].max_value = max(clusters[to].max_value, clusters[c].max_value); 
+          clusters[to].min_idx   = min(clusters[to].min_idx,   clusters[c].min_idx); 
+          clusters[to].max_idx   = max(clusters[to].max_idx,   clusters[c].max_idx); 
+          clusters[c].count = 0;
+          merged = 1;
+        }
+      }
+
+      clusters[to].done = 1;
+
+      if (merged == 0)
+        break;
+    };
+
+    printf("clusterize: cluster merge\n");
+    dump_clusters(clusters, num_clusters);
+    printf("clusterize: finished\n");
+
+    return num_clusters;
+}
+
 //
 void analyze_freq()
 {
@@ -288,72 +463,79 @@ void analyze_freq()
     int thread_freq[MAX_THREADS];
     int thread_sig[MAX_THREADS];
     int thread_idx[MAX_THREADS];
-    uint64_t thread_dist[MAX_THREADS];
+    uint64_t thread_time[MAX_THREADS];
     
-    int sd = 0;
-    for (int s = 0; s<min_length && sd < NUM_FREQ_SAMPLES; s++)
+    freq_valid_samples_list_count = 0;
+    for (int s = 0; s<min_length && freq_valid_samples_list_count < NUM_FREQ_SAMPLES; s++)
     {
-        uint64_t tb0 = get_sample(0, s)->timestamp_b;
-        uint64_t te0 = get_sample(0, s)->timestamp_e;
-        get_sample(0, s)->index = s;
-
+        uint64_t tb0 = 0;
+        uint64_t te0 = 0;
         int valid = 1;
         for (int t = 0; t<num_threads; t++)
         {
-          struct FreqSample *smp = get_sample(t, s);
+            struct FreqSample *smp = get_sample(t, s);
+            if (smp->signature == 0)
+                valid = 0;
 
-          thread_freq[t] = smp->max_freq;
-          thread_sig[t]  = smp->signature;
-          thread_dist[t] = smp->timestamp_e - smp->timestamp_b;
-          thread_idx[t]  = t;
-
-          if (t > 0)
-          {
-            uint64_t tb = get_sample(t, s)->timestamp_b;
-            uint64_t te = get_sample(t, s)->timestamp_e;
-            if (!intersect(tb0, te0, tb, te) || smp->signature == 0)
-              valid = 0;
-          }
+            uint64_t tb = smp->timestamp_b;
+            uint64_t te = smp->timestamp_e;
+            if (t == 0)
+            {
+                tb0 = tb;
+                te0 = te;
+            }
+            else
+            {
+              if (!intersect(tb0, te0, tb, te))
+                valid = 0;
+            }
         }
 
         if (valid)
         {
-            sd++;
+            freq_valid_samples_list[freq_valid_samples_list_count++] = s;
 
             printf("pos %d: ", s);
 
             //add freq point
             for (int t = 0; t<num_threads; t++)
             {
-              struct FreqSample *smp = get_sample(t, s);
-              printf("%d/%d(+%d) ", smp->max_freq, smp->signature, time_from_start_ms(smp->timestamp_b));
+                struct FreqSample *smp = get_sample(t, s);
+                printf("%d/%d(+%d:%f) ", smp->max_freq, smp->signature, time_from_start_ms(smp->timestamp_b), hpctime_to_ms(thread_time[t]));
 
-                if (sd == 1)
+		uint64_t tb = smp->timestamp_b;
+		uint64_t te = smp->timestamp_e;
+		thread_freq[t] = smp->max_freq;
+		thread_sig[t]  = smp->signature;
+		thread_time[t] = te - tb;
+		thread_idx[t]  = t;
+
+                if (freq_valid_samples_list_count == 1)
                 {
+                    //export first value for gui
                     measure_thread_freq[t]     = 1000000.0 * smp->max_freq;
                     measure_thread_min_freq[t] = 1000000.0 * smp->signature;
                     measure_thread_max_freq[t] = 1000000.0 * time_from_start_ms(smp->timestamp_b);
                 }
 
-                struct FreqSample *fs = get_sample(t, sd-1);
- //               printf("+fp tb %lld te %lld %lld msec\n", fs->timestamp_b, fs->timestamp_e,
- //                                                         (fs->timestamp_e - fs->timestamp_b) / 1000000);
-
                 int found = 0;
-                for (int p = 0; p < num_freq_points; p++)
+                if (0) for (int p = 0; p < num_freq_points; p++)
                 {
                     if (frequency_points[p].freq      == thread_freq[t] &&
                         frequency_points[p].signature == thread_sig[t])
                     {
+                        frequency_points[p].time = (frequency_points[p].time + thread_time[t]) / 2;
                         frequency_points[p].count++;
                         found = 1;
                         break;
                     }
-                }
+                };
+
                 if (!found && num_freq_points < NUM_FREQ_POINTS)
                 {
-                    frequency_points[num_freq_points].freq     = thread_freq[t];
                     frequency_points[num_freq_points].signature = thread_sig[t];
+                    frequency_points[num_freq_points].freq     = thread_freq[t];
+                    frequency_points[num_freq_points].time     = thread_time[t];
                     frequency_points[num_freq_points].count = 1;
                     num_freq_points++;
                 }
@@ -362,21 +544,35 @@ void analyze_freq()
         }
     }
 
-    load_debug_freq_points();
-
     dump_freq_points();
 
-    qsort(frequency_points, num_freq_points, sizeof(struct FreqPoint), freq_point_comp);
+    for (int i=0; i<num_freq_points; i++)
+        data_pnts_in[i].value = frequency_points[i].signature;
 
-    printf("after sort \n");
+    int num_clusters = clusterize(data_pnts_in, num_freq_points);
+    int clusters_out = 0;
+    for (int c=0; c<num_clusters; c++)
+    {
+      if (clusters[c].count > 0 /* && clusters[c].done*/ )
+      {
+        cpu_clusters[clusters_out].signature = clusters[c].ref_value;
+        printf("Cluster: %d sig=%d\n", clusters_out, cpu_clusters[clusters_out].signature); 
+        //TODO: collect frequencies
+        clusters_out++;
+      }
+    }
 
+
+    //qsort(frequency_points, num_freq_points, sizeof(struct FreqPoint), fpoint_sig_comp);
+
+    printf("modified freqpoints\n");
     cleanup_freq_points();
     dump_freq_points();
 
     struct FreqSample tmp_samples[MAX_THREADS];
 
     //filter
-    for (int s = 0; s<sd; s++)
+    for (int s = 0; s<freq_valid_samples_list_count; s++)
     {
         //sort by frequency
         for (int t = 0; t<num_threads; t++)
@@ -387,6 +583,41 @@ void analyze_freq()
     }
 
     free(thread_samples_aligned);
+}
+
+void warmup()
+{
+    cpu_workload(INITIAL_WARMUP);
+
+    for (int i = 0; i < CALIB_ATTEMPTS; i++)
+    {
+        uint64_t tb, te;
+        tb = hpctime();
+        dummy_call();
+        te = hpctime();
+
+        //FIXME: access from multiple threads
+        if (min_overhead > te - tb)
+            min_overhead = te - tb;
+    }
+};
+
+double measure_freq()
+{
+    uint64_t tb, te;
+    uint64_t min_time = ~0;
+
+    for (int i = 0; i < CALIB_ATTEMPTS; i++)
+    {
+        tb = hpctime();
+        calib_seq_add(CALIB_UNROLL * CALIB_REPEAT);
+        te = hpctime();
+        if (min_time > te - tb)
+            min_time = te - tb;
+    }
+    if (min_time > min_overhead)
+        min_time -= min_overhead;
+    return CALIB_UNROLL * CALIB_REPEAT / hpctime_to_s(min_time);
 }
 
 double measure_signature(double freq)
@@ -429,12 +660,12 @@ void measure_workload(int thread_id, int sample_index)
     int is1 = (int)s1;
     int is2 = (int)s2;
 
-    smp->index = -1;
-    //cross check: accept signature if deltas in 20/10% range
-    if (abs(is2-is1) * 10 < is1 && abs(if2-if1) * 20 < if1)
+    smp->index = sample_index;
+    //cross check: accept signature if deltas in 10/5% range
+    if (check_tolerance(is1, is2, 10) && check_tolerance(if1, if2, 20))
         smp->signature = min(is1, is2);
     else
-        smp->signature = 0;//-is1;
+        smp->signature = 0;
 
     smp->max_freq = max(if1, if2);
     smp->min_freq = min(if1, if2);
