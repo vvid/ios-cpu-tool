@@ -7,6 +7,14 @@
 //AMD CC
 //rdi - rsi - rdx - rcx - r8 - r9
 
+//ARM64
+//r0-7 input/res
+//r8   indirect result location
+//r9-r15 tmp
+//r16-r18 IPx
+//r19-r28 callee-saved
+//r29-30 FP LR
+
 .macro ALIGN_FUNC
      .align 4
 .endm
@@ -155,6 +163,91 @@ DEFUN _sync_threads
 
 4:   ret
 
+
+// ptr, count
+DEFUN _a_mem_max_loads
+ 1:
+    ldr	w2,[x0, #0x00]
+    ldr	w3,[x0, #0x04]
+    ldr	w4,[x0, #0x08]
+    ldr	w5,[x0, #0x0c]
+
+    subs x1, x1, #1
+
+    ldr	w10,[x0, #0x10]
+    ldr	w11,[x0, #0x14]
+    ldr	w12,[x0, #0x18]
+    ldr	w13,[x0, #0x1c]
+
+    bne 1b
+    ret
+
+DEFUN _a_mem_max_stores
+ 1:
+    str	w2,[x0, #0x00]
+    str	w3,[x0, #0x04]
+    str	w4,[x0, #0x08]
+    str	w5,[x0, #0x0c]
+
+    subs x1, x1, #1
+
+    str	w10,[x0, #0x10]
+    str	w11,[x0, #0x14]
+    str	w12,[x0, #0x18]
+    str	w13,[x0, #0x1c]
+
+    bne 1b
+    ret
+
+// ptr, count
+DEFUN _a_mem_walk
+ 1:
+    ldr	x0,[x0, #0]
+    ldr	x0,[x0, #0]
+    ldr	x0,[x0, #0]
+    ldr	x0,[x0, #0]
+    subs x1, x1, #1
+    ldr	x0,[x0, #0]
+    ldr	x0,[x0, #0]
+    ldr	x0,[x0, #0]
+    ldr	x0,[x0, #0]
+    bne 1b
+    ret
+
+
+//cnt_inner, cnt_outer, ptr, stride
+DEFUN _a_mem_fetchline1
+    mov	x10,x0
+    mov	x12,x2
+    .align 4
+ 1:
+    ldr	w4,[x2, #0x00]
+    add	x2,x2,x3
+    subs x0,x0, #1
+    bne 1b
+    mov	x2,x12
+    mov	x0,x10
+    subs x1,x1, #1
+    bne 1b
+    ret
+
+//cnt_inner, cnt_outer, ptr, stride
+DEFUN _a_mem_fetchline2
+    mov	x10,x0
+    mov	x12,x2
+    .align 4
+ 1:
+    ldr	w4,[x2, #0x00]
+    ldr	w5,[x2, #0x10]
+    add	x2,x2,x3
+    subs x0,x0, #1
+    bne 1b
+    mov	x2,x12
+    mov	x0,x10
+    subs x1,x1, #1
+    bne 1b
+    ret
+
 #else  //x64
 
 DEFUN _dummy_call
@@ -207,6 +300,13 @@ DEFUN _calib_signature
     sub $1, %rdi
     jne 1b
     popq %rax
+    retq
+
+DEFUN _a_mem_max_loads
+DEFUN _a_mem_max_stores
+DEFUN _a_mem_walk
+DEFUN _a_mem_fetchline1
+DEFUN _a_mem_fetchline2
     retq
 
 DEFUN _sync_threads
