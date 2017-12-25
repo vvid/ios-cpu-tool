@@ -66,7 +66,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         if (started)
         {
           started = false
-          stop_threads()
+          calibrate_stop_threads()
           sender.setTitle("Get CPU freq", for: .normal)
 
             var str: String = ""
@@ -83,7 +83,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         {
           sender.setTitle("Stop", for: .normal)
           runThreads = numThreads
-          start_threads(Int32(numThreads), 1000)
+          calibrate_start_threads(Int32(numThreads), 1000)
           started = true
         }
     }
