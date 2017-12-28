@@ -8,6 +8,11 @@
 
 //iphone SE/8 timebase 24MHz = 125/3 = 41,[6]ns
 
+
+//- config --------------------
+#define ANALYZE_DVFS_BOOST 0
+//-----------------------------
+
 #define CYCLES_PER_MS    2000000  //base scale
 
 #define CALIB_UNROLL     20 //(unrolled 20x internally)
@@ -192,6 +197,11 @@ int thread_lock_var = 0;
 uint64_t timescale = 1;
 uint64_t min_overhead = ~0;
 uint64_t start_of_time = 0;
+
+#define MAX_DVFS_SAMPLES 1024
+
+uint16_t dvfs_freq_table[MAX_THREADS][MAX_DVFS_SAMPLES][2]; //first sample freq, second is time_in_sec * 65536
+
 
 //Freq measurement state
 
@@ -701,6 +711,62 @@ void warmup()
     }
 };
 
+
+void measure_dvfs_boost(int thread)
+{
+    int sample = 0;
+    uint64_t tb, te, start_time;
+
+#define DVFS_TEST_REPEAT (CYCLES_PER_MS/CALIB_UNROLL/8)
+
+    start_time = hpctime();
+
+    for (int i=0; i<MAX_DVFS_SAMPLES; i++)
+    {
+        uint64_t tb, te;
+        uint64_t min_time = ~0;
+
+        //sample per ~ 1/4 msec
+        for (int i = 0; i < 2; i++)
+        {
+            tb = hpctime();
+            calib_seq_add(CALIB_UNROLL * DVFS_TEST_REPEAT);
+            te = hpctime();
+            if (min_time > te - tb)
+                min_time = te - tb;
+        }
+
+        if (min_time > min_overhead)
+            min_time -= min_overhead;
+
+        uint64_t time_from_start = tb - start_time;
+        double time_from_s = hpctime_to_s(time_from_start);
+
+        double freq = CALIB_UNROLL * DVFS_TEST_REPEAT / hpctime_to_s(min_time);
+        dvfs_freq_table[thread][i][0] = freq_mhz(freq); 
+        dvfs_freq_table[thread][i][1] = min(65535, 65536 * time_from_s);
+    }
+}
+
+void analyze_dvfs_boost()
+{
+  for (int t=0; t<num_threads; t++)
+  {
+    const int columns = 8;
+    printf("dvfs table #%d", t);
+    for (int i=0; i<MAX_DVFS_SAMPLES/columns; i++)
+    {
+        printf("\n%3d (+%6d us): ", i*columns, (int)(dvfs_freq_table[t][i*columns+0][1] / 65536.0 * 1000000));
+        for (int j=0; j<columns; j++)
+        {
+          printf("%4d ", dvfs_freq_table[t][i*columns+j][0]);
+        }
+    }
+    printf("\n");
+  }
+}
+
+
 double measure_freq()
 {
     uint64_t tb, te;
@@ -774,7 +840,11 @@ void * measure_thread(void *thread_id)
 {
     long tid = (long)thread_id;
 
+#if ANALYZE_DVFS_BOOST
+    measure_dvfs_boost((int)tid);
+#else
     warmup();
+#endif
 
     while (!thread_stop_event)
     {
@@ -831,6 +901,10 @@ void calibrate_stop_threads()
     {
         pthread_join(measure_threads[i], NULL);
     }
+
+#if ANALYZE_DVFS_BOOST
+    analyze_dvfs_boost();
+#endif
     analyze_freq(NULL, 0);
     free(thread_samples);
 }
