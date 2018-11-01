@@ -16,8 +16,8 @@
 #define CYCLES_PER_MS    2000000  //base scale
 
 #define CALIB_UNROLL     20 //(unrolled 20x internally)
-#define CALIB_REPEAT     (CYCLES_PER_MS/CALIB_UNROLL/2)  //1 msec
-#define CALIB_ATTEMPTS   10
+#define CALIB_REPEAT     (CYCLES_PER_MS/CALIB_UNROLL/8)  //1/N msec @ 2GHz
+#define CALIB_ATTEMPTS   5
 
 #define INITIAL_WARMUP   2000000
 #define WORKLOAD_REPEAT  50000 //*100
@@ -35,10 +35,16 @@
 #include "TargetConditionals.h"
 #if TARGET_OS_IPHONE && TARGET_IPHONE_SIMULATOR
   #include <x86intrin.h>
+  #define ARCH_X64 1
+  #define ARCH_A64 0
 #elif TARGET_OS_IPHONE
   // define something for iphone  
+  #define ARCH_X64 0
+  #define ARCH_A64 1
 #else
   #define TARGET_OS_OSX 1
+  #define ARCH_X64 1
+  #define ARCH_A64 0
   // define something for OSX
 #endif
 
@@ -57,11 +63,16 @@
 
 //asm prototypes
 extern void dummy_call(void);
-extern void* calibration(void);
 extern int  cpu_workload(int count) __attribute__ ((noinline));
-extern void calib_seq_add(uint64_t count);
+
+// returns delta raw timer delta
+extern uint64_t calib_seq_add(uint64_t count);
+extern uint64_t calib_signature(uint64_t count);
+
+extern void calib_seq_add_x64(uint64_t count);
+extern void calib_signature_x64(uint64_t count);
+
 extern void calib_seq_nop(uint64_t count);
-extern void calib_signature(uint64_t count);
 extern void sync_threads(uint64_t thread_id, uint64_t num_threads, int *stop_event,  int *lock_ptr);
 //
 
@@ -694,6 +705,23 @@ void analyze_freq(void *report, int report_size)
     }
 }
 
+#if ARCH_X64
+uint64_t calib_seq_add(uint64_t count)
+{
+    uint64_t tb = hpctime();
+    calib_seq_add_x64(count);
+    uint64_t te = hpctime();
+    return te - tb;
+}
+uint64_t calib_signature(uint64_t count)
+{
+    uint64_t tb = hpctime();
+    calib_signature_x64(count);
+    uint64_t te = hpctime();
+    return te - tb;
+}
+#endif
+
 void warmup()
 {
     cpu_workload(INITIAL_WARMUP);
@@ -717,7 +745,7 @@ void measure_dvfs_boost(int thread)
     int sample = 0;
     uint64_t tb, te, start_time;
 
-#define DVFS_TEST_REPEAT (CYCLES_PER_MS/CALIB_UNROLL/8)
+#define DVFS_TEST_REPEAT (CYCLES_PER_MS/CALIB_UNROLL/4)
 
     start_time = hpctime();
 
@@ -775,13 +803,19 @@ double measure_freq()
     for (int i = 0; i < CALIB_ATTEMPTS; i++)
     {
         tb = hpctime();
-        calib_seq_add(CALIB_UNROLL * CALIB_REPEAT);
+        uint64_t tf = calib_seq_add(CALIB_UNROLL * CALIB_REPEAT);
         te = hpctime();
         if (min_time > te - tb)
             min_time = te - tb;
+#if ARCH_A64
+        if (min_time > tf)
+            min_time = tf;
+#endif
     }
+#if !ARCH_A64
     if (min_time > min_overhead)
         min_time -= min_overhead;
+#endif
     return CALIB_UNROLL * CALIB_REPEAT / hpctime_to_s(min_time);
 }
 
@@ -793,12 +827,18 @@ double measure_signature(double freq)
     for (int i = 0; i < 5; i++)
     {
         tb = hpctime();
-        calib_signature(CALIB_REPEAT);
+        uint64_t tf = calib_signature(CALIB_REPEAT);
         te = hpctime();
         if (min_time > te - tb)
             min_time = te - tb;
+#if ARCH_A64
+        if (min_time > tf)
+            min_time = tf;
+#endif
     }
+#if !ARCH_A64
     min_time -= min_overhead;
+#endif
 
     //freq (cycles/sec) * time_s_per_iter (sec/repeat) = cycles/repeat
     double time_per_iteration = 1000 * hpctime_to_s(min_time) / CALIB_REPEAT;
