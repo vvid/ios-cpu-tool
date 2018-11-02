@@ -10,5 +10,3 @@ double get_thread_freq(int core_id);
 double get_thread_min_freq(int core_id);
 double get_thread_max_freq(int core_id);
 
-
-

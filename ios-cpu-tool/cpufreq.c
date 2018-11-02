@@ -10,7 +10,7 @@
 
 
 //- config --------------------
-#define ANALYZE_DVFS_BOOST 0
+
 //-----------------------------
 
 #define CYCLES_PER_MS    2000000  //base scale
@@ -570,7 +570,7 @@ void analyze_freq(void *report, int report_size)
                 uint64_t tb = smp->timestamp_b;
                 uint64_t te = smp->timestamp_e;
 
-                printf("%d/%d(+%d:%f) ", smp->max_freq, smp->signature, time_from_start_ms(tb), hpctime_to_ms(te - tb));
+                printf("%d-%d/%d(+%d:%f) ", smp->min_freq, smp->max_freq, smp->signature, time_from_start_ms(tb), hpctime_to_ms(te - tb));
   
                 if (num_freq_points < NUM_FREQ_POINTS)
                 {
@@ -880,11 +880,7 @@ void * measure_thread(void *thread_id)
 {
     long tid = (long)thread_id;
 
-#if ANALYZE_DVFS_BOOST
-    measure_dvfs_boost((int)tid);
-#else
     warmup();
-#endif
 
     while (!thread_stop_event)
     {
@@ -898,7 +894,7 @@ void * measure_thread(void *thread_id)
     pthread_exit(NULL);
 }
 
-void calibrate_start_threads(int num_cores, int steps)
+void calculate_freq_start(int num_cores, int steps)
 {
     assert(num_cores <= MAX_THREADS);
     num_threads = num_cores;
@@ -934,7 +930,7 @@ void calibrate_start_threads(int num_cores, int steps)
     }
 }
 
-void calibrate_stop_threads()
+void calculate_freq_stop()
 {
     thread_stop_event = 1;
     for (int i = 0; i < num_threads; i++)
@@ -942,9 +938,6 @@ void calibrate_stop_threads()
         pthread_join(measure_threads[i], NULL);
     }
 
-#if ANALYZE_DVFS_BOOST
-    analyze_dvfs_boost();
-#endif
     analyze_freq(NULL, 0);
     free(thread_samples);
 }
@@ -961,4 +954,60 @@ double get_thread_max_freq(int core_id)
 {
     return measure_thread_max_freq[core_id];
 }
+
+
+void * measure_boost_thread(void *thread_id)
+{
+    long tid = (long)thread_id;
+
+    measure_dvfs_boost((int)tid);
+
+    pthread_exit(NULL);
+}
+
+void measure_boost_start(int num_cores, int length_ms, int pause_ms, int attempts)
+{
+    assert(num_cores <= MAX_THREADS);
+    num_threads = num_cores;
+    thread_stop_event = 0;
+    thread_lock_var = num_cores;
+
+    thread_samples = (struct FreqSample*)malloc(sizeof(struct FreqSample) * num_thread_samples * num_cores);
+
+    memset(thread_samples, 0, sizeof(struct FreqSample) * num_thread_samples * num_cores);
+
+    mach_port_t ports[MAX_THREADS];
+
+    int res = 0;
+    for (intptr_t i = 0; i < num_threads; i++)
+    {
+        measure_thread_freq[i] = 0.;
+        measure_thread_min_freq[i] = 1E12;
+        measure_thread_max_freq[i] = 0.;
+        thread_sample_index[i] = 0;
+
+        res |= pthread_create_suspended_np(&measure_threads[i], NULL, measure_boost_thread, (void *)i);
+        ports[i] = pthread_mach_thread_np(measure_threads[i]);
+        thread_affinity_policy_data_t policy_data = { (int)i };
+        thread_policy_set(ports[i], THREAD_AFFINITY_POLICY, (thread_policy_t)&policy_data, THREAD_AFFINITY_POLICY_COUNT);
+    }
+
+    start_of_time = hpctime();
+
+    for (intptr_t i = 0; i < num_threads; i++)
+    {
+        thread_resume(ports[i]);
+    }
+}
+
+void measure_boost_stop()
+{
+    thread_stop_event = 1;
+    for (int i = 0; i < num_threads; i++)
+        pthread_join(measure_threads[i], NULL);
+    analyze_dvfs_boost();
+    free(thread_samples);
+}
+
+
 

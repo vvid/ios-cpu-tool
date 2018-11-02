@@ -13,31 +13,32 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var textFieldThreads: UITextField!
     @IBOutlet weak var textOutput: UITextView!
     @IBOutlet weak var buttonStartStop: UIButton!
+    @IBOutlet weak var buttonBoost: UIButton!
+    @IBOutlet weak var buttonMemLat: UIButton!
+    @IBOutlet weak var buttonBandwidth: UIButton!
 
     var started: Bool = false
     var numThreads: Int = 1
-    let maxThreads: Int = 6
-    var numCpuCores : Int = 1
-    var actCpuCores : Int = 1
-    var runThreads : Int = 0
+    var cpuInfo = CpuInfo();
+    var measureFreq = MeasureCpuFreq();
 
     func textFieldDidEndEditing(_ sender: UITextField) {
         if let val = Int(sender.text!)
         {
-          numThreads = min(max(val, 1), numCpuCores)
-          sender.text = String(numThreads)
+            numThreads = cpuInfo.limitNumThreads(val)
+            sender.text = String(numThreads)
         }
     }
 
     func textFieldShouldReturn(_ sender: UITextField) -> Bool {
         if let _ = Int(sender.text!)
         {
-          sender.resignFirstResponder()
-          return true
+            sender.resignFirstResponder()
+            return true
         }
         else
         {
-          return false
+            return false
         }
     }
 
@@ -66,11 +67,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
         if (started)
         {
           started = false
-          calibrate_stop_threads()
-          sender.setTitle("Get CPU freq", for: .normal)
+          calculate_freq_stop()
+          sender.setTitle("Max freq", for: .normal)
 
             var str: String = ""
-            for i in 1...runThreads
+            for i in 1...measureFreq.runThreads
             {
                 str = str + "Core " + String(i) + ": " + freqInMHz(get_thread_freq(Int32(i-1))) + "MHz (id="
                                                        + freqInMHz(get_thread_min_freq(Int32(i-1))) + " +"
@@ -81,26 +82,54 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
         else
         {
-          sender.setTitle("Stop", for: .normal)
-          runThreads = numThreads
-          calibrate_start_threads(Int32(numThreads), 1000)
+          sender.setTitle("(Stop)", for: .normal)
+          measureFreq.measureFreq(cpuInfo, numThreads);
           started = true
         }
+    }
+
+    @IBAction func buttonBoostAction(_ sender: UIButton) {
+
+        if (started)
+        {
+            started = false
+            measure_boost_stop()
+            sender.setTitle("Boost", for: .normal)
+
+            var str: String = ""
+            for i in 1...measureFreq.runThreads
+            {
+                str = str + "Core " + String(i) + ": " + freqInMHz(get_thread_freq(Int32(i-1))) + "MHz (id="
+                    + freqInMHz(get_thread_min_freq(Int32(i-1))) + " +"
+                    + freqInMHz(get_thread_max_freq(Int32(i-1))) + "ms)\n"
+            }
+
+            textOutput.text = str
+        }
+        else
+        {
+            sender.setTitle("(Stop)", for: .normal)
+            measureFreq.measureBoost(cpuInfo, numThreads)
+            started = true
+        }
+    }
+
+    @IBAction func buttonMemLatAction(_ sender: UIButton) {
+    }
+
+    @IBAction func buttonMemBandwidthAction(_ sender: UIButton) {
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         textFieldThreads.delegate = self
-        numCpuCores = ProcessInfo.processInfo.processorCount
-        actCpuCores = ProcessInfo.processInfo.activeProcessorCount
-        textOutput.text = "Cores: " + String(numCpuCores) + "\nActive Cores: " + String(actCpuCores)
+        cpuInfo.setup()
+        textOutput.text = "Cores: " + String(cpuInfo.numCores) + "\nActive Cores: " + String(cpuInfo.actCores)
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-
 }
 

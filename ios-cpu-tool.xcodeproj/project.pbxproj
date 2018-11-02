@@ -14,6 +14,14 @@
 		B70A4A591F8ED9DD00FD748C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B70A4A571F8ED9DD00FD748C /* LaunchScreen.storyboard */; };
 		B70A4A621F901C5300FD748C /* cpufreq.c in Sources */ = {isa = PBXBuildFile; fileRef = B70A4A611F901C5300FD748C /* cpufreq.c */; };
 		B70A4A641F90232F00FD748C /* cpufreq_asm.S in Sources */ = {isa = PBXBuildFile; fileRef = B70A4A631F90232E00FD748C /* cpufreq_asm.S */; };
+		B7E895E621B009E500E9C59A /* measureCpufreq.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E895E521B009E500E9C59A /* measureCpufreq.swift */; };
+		B7E895E721B009E500E9C59A /* measureCpufreq.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E895E521B009E500E9C59A /* measureCpufreq.swift */; };
+		B7F1875D218C2BB000470D96 /* AppDelegateTv.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F1875C218C2BB000470D96 /* AppDelegateTv.swift */; };
+		B7F1875F218C2BB000470D96 /* ViewControllerTv.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F1875E218C2BB000470D96 /* ViewControllerTv.swift */; };
+		B7F18762218C2BB000470D96 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B7F18760218C2BB000470D96 /* Main.storyboard */; };
+		B7F18764218C2BB200470D96 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B7F18763218C2BB200470D96 /* Assets.xcassets */; };
+		B7F18771218D634C00470D96 /* cpufreq_asm.S in Sources */ = {isa = PBXBuildFile; fileRef = B7F1876F218D634C00470D96 /* cpufreq_asm.S */; };
+		B7F18772218D634C00470D96 /* cpufreq.c in Sources */ = {isa = PBXBuildFile; fileRef = B7F18770218D634C00470D96 /* cpufreq.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,10 +35,27 @@
 		B70A4A601F901C5200FD748C /* ios-cpu-tool-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ios-cpu-tool-Bridging-Header.h"; sourceTree = "<group>"; };
 		B70A4A611F901C5300FD748C /* cpufreq.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cpufreq.c; sourceTree = "<group>"; };
 		B70A4A631F90232E00FD748C /* cpufreq_asm.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = cpufreq_asm.S; sourceTree = "<group>"; };
+		B7E895E521B009E500E9C59A /* measureCpufreq.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = measureCpufreq.swift; sourceTree = "<group>"; };
+		B7F1875A218C2BB000470D96 /* tvos-cpu-tool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "tvos-cpu-tool.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7F1875C218C2BB000470D96 /* AppDelegateTv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateTv.swift; sourceTree = "<group>"; };
+		B7F1875E218C2BB000470D96 /* ViewControllerTv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerTv.swift; sourceTree = "<group>"; };
+		B7F18761218C2BB000470D96 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B7F18763218C2BB200470D96 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B7F18765218C2BB200470D96 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B7F1876E218D634B00470D96 /* tvos-cpu-tool-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tvos-cpu-tool-Bridging-Header.h"; sourceTree = "<group>"; };
+		B7F1876F218D634C00470D96 /* cpufreq_asm.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; name = cpufreq_asm.S; path = "ios-cpu-tool/cpufreq_asm.S"; sourceTree = SOURCE_ROOT; };
+		B7F18770218D634C00470D96 /* cpufreq.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpufreq.c; path = "ios-cpu-tool/cpufreq.c"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		B70A4A481F8ED9DD00FD748C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7F18757218C2BB000470D96 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -44,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				B70A4A4D1F8ED9DD00FD748C /* ios-cpu-tool */,
+				B7F1875B218C2BB000470D96 /* tvos-cpu-tool */,
 				B70A4A4C1F8ED9DD00FD748C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				B70A4A4B1F8ED9DD00FD748C /* ios-cpu-tool.app */,
+				B7F1875A218C2BB000470D96 /* tvos-cpu-tool.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,8 +95,24 @@
 				B70A4A5A1F8ED9DD00FD748C /* Info.plist */,
 				B70A4A611F901C5300FD748C /* cpufreq.c */,
 				B70A4A601F901C5200FD748C /* ios-cpu-tool-Bridging-Header.h */,
+				B7E895E521B009E500E9C59A /* measureCpufreq.swift */,
 			);
 			path = "ios-cpu-tool";
+			sourceTree = "<group>";
+		};
+		B7F1875B218C2BB000470D96 /* tvos-cpu-tool */ = {
+			isa = PBXGroup;
+			children = (
+				B7F1876F218D634C00470D96 /* cpufreq_asm.S */,
+				B7F18770218D634C00470D96 /* cpufreq.c */,
+				B7F1875C218C2BB000470D96 /* AppDelegateTv.swift */,
+				B7F1875E218C2BB000470D96 /* ViewControllerTv.swift */,
+				B7F18760218C2BB000470D96 /* Main.storyboard */,
+				B7F18763218C2BB200470D96 /* Assets.xcassets */,
+				B7F18765218C2BB200470D96 /* Info.plist */,
+				B7F1876E218D634B00470D96 /* tvos-cpu-tool-Bridging-Header.h */,
+			);
+			path = "tvos-cpu-tool";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -92,19 +135,41 @@
 			productReference = B70A4A4B1F8ED9DD00FD748C /* ios-cpu-tool.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B7F18759218C2BB000470D96 /* tvos-cpu-tool */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7F18766218C2BB200470D96 /* Build configuration list for PBXNativeTarget "tvos-cpu-tool" */;
+			buildPhases = (
+				B7F18756218C2BB000470D96 /* Sources */,
+				B7F18757218C2BB000470D96 /* Frameworks */,
+				B7F18758218C2BB000470D96 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "tvos-cpu-tool";
+			productName = "tvos-cpu-tool";
+			productReference = B7F1875A218C2BB000470D96 /* tvos-cpu-tool.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		B70A4A431F8ED9DD00FD748C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0900;
-				LastUpgradeCheck = 0900;
+				LastSwiftUpdateCheck = 1000;
+				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = vvid;
 				TargetAttributes = {
 					B70A4A4A1F8ED9DD00FD748C = {
 						CreatedOnToolsVersion = 9.0;
 						LastSwiftMigration = 0900;
+						ProvisioningStyle = Automatic;
+					};
+					B7F18759218C2BB000470D96 = {
+						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -123,6 +188,7 @@
 			projectRoot = "";
 			targets = (
 				B70A4A4A1F8ED9DD00FD748C /* ios-cpu-tool */,
+				B7F18759218C2BB000470D96 /* tvos-cpu-tool */,
 			);
 		};
 /* End PBXProject section */
@@ -138,6 +204,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7F18758218C2BB000470D96 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B7F18764218C2BB200470D96 /* Assets.xcassets in Resources */,
+				B7F18762218C2BB000470D96 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -146,9 +221,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				B70A4A621F901C5300FD748C /* cpufreq.c in Sources */,
+				B7E895E621B009E500E9C59A /* measureCpufreq.swift in Sources */,
 				B70A4A641F90232F00FD748C /* cpufreq_asm.S in Sources */,
 				B70A4A511F8ED9DD00FD748C /* ViewController.swift in Sources */,
 				B70A4A4F1F8ED9DD00FD748C /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7F18756218C2BB000470D96 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B7F18772218D634C00470D96 /* cpufreq.c in Sources */,
+				B7E895E721B009E500E9C59A /* measureCpufreq.swift in Sources */,
+				B7F18771218D634C00470D96 /* cpufreq_asm.S in Sources */,
+				B7F1875F218C2BB000470D96 /* ViewControllerTv.swift in Sources */,
+				B7F1875D218C2BB000470D96 /* AppDelegateTv.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -171,6 +259,14 @@
 			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
 		};
+		B7F18760218C2BB000470D96 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B7F18761218C2BB000470D96 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -188,6 +284,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -195,6 +292,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -245,6 +343,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -252,6 +351,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -286,9 +386,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DCEK79FHDQ;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "ios-cpu-tool/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.self.ios-cpu-tool";
@@ -306,9 +407,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DCEK79FHDQ;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "ios-cpu-tool/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.self.ios-cpu-tool";
@@ -317,6 +419,56 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "ios-cpu-tool/ios-cpu-tool-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B7F18767218C2BB200470D96 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = "tvos-cpu-tool/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "edu.self.tvos-cpu-tool";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_OBJC_BRIDGING_HEADER = "tvos-cpu-tool/tvos-cpu-tool-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
+			};
+			name = Debug;
+		};
+		B7F18768218C2BB200470D96 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = "tvos-cpu-tool/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "edu.self.tvos-cpu-tool";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_OBJC_BRIDGING_HEADER = "tvos-cpu-tool/tvos-cpu-tool-Bridging-Header.h";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Release;
 		};
@@ -337,6 +489,15 @@
 			buildConfigurations = (
 				B70A4A5E1F8ED9DD00FD748C /* Debug */,
 				B70A4A5F1F8ED9DD00FD748C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7F18766218C2BB200470D96 /* Build configuration list for PBXNativeTarget "tvos-cpu-tool" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7F18767218C2BB200470D96 /* Debug */,
+				B7F18768218C2BB200470D96 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

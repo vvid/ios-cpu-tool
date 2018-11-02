@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder.AppleTV.Storyboard" version="3.0" toolsVersion="14460.31" targetRuntime="AppleTV" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="appleTV" orientation="landscape">
+        <adaptation id="light"/>
+    </device>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="tvos_cpu_tool" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="HpU-jZ-xaP">
+                                <rect key="frame" x="110" y="60" width="768" height="241"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <subviews>
+                                    <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Lau-V5-Tpm">
+                                        <rect key="frame" x="0.0" y="0.0" width="768" height="69"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Use cores" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GFq-j6-Qig">
+                                                <rect key="frame" x="0.0" y="0.0" width="256" height="69"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="256" id="4xn-YX-Uko"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="IrO-WT-hl4">
+                                                <rect key="frame" x="256" y="0.0" width="512" height="70"/>
+                                                <color key="backgroundColor" white="0.0" alpha="0.10000000000000001" colorSpace="calibratedWhite"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="512" id="sYn-6n-PJL"/>
+                                                </constraints>
+                                                <segments>
+                                                    <segment title="1"/>
+                                                    <segment title="2" enabled="NO"/>
+                                                    <segment title="3" enabled="NO"/>
+                                                    <segment title="4" enabled="NO"/>
+                                                    <segment title="5" enabled="NO"/>
+                                                    <segment title="6" enabled="NO"/>
+                                                    <segment title="7" enabled="NO"/>
+                                                    <segment title="8" enabled="NO"/>
+                                                </segments>
+                                                <connections>
+                                                    <action selector="numCoresChanged:" destination="BYZ-38-t0r" eventType="valueChanged" id="ADC-ZV-rRc"/>
+                                                </connections>
+                                            </segmentedControl>
+                                        </subviews>
+                                    </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gHv-W2-g25">
+                                        <rect key="frame" x="0.0" y="69" width="768" height="86"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MK7-NI-CcX" userLabel="ButtonGetFreq">
+                                                <rect key="frame" x="0.0" y="0.0" width="768" height="86"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="256" id="PWz-Rr-FEg"/>
+                                                    <constraint firstAttribute="width" constant="256" id="gTe-3u-QvZ"/>
+                                                </constraints>
+                                                <inset key="contentEdgeInsets" minX="40" minY="20" maxX="40" maxY="20"/>
+                                                <state key="normal" title="Max Freq"/>
+                                                <connections>
+                                                    <action selector="startFreqCalc:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="foc-BA-lOJ"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BVA-Wn-ch9">
+                                        <rect key="frame" x="0.0" y="155" width="768" height="86"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SNd-FK-seq" userLabel="ButtonBoost">
+                                                <rect key="frame" x="0.0" y="0.0" width="768" height="86"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="256" id="Nzt-K4-sYh"/>
+                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="256" id="hE0-b8-tqe"/>
+                                                </constraints>
+                                                <inset key="contentEdgeInsets" minX="40" minY="20" maxX="40" maxY="20"/>
+                                                <state key="normal" title="Boost"/>
+                                                <connections>
+                                                    <action selector="buttonBoostAction:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="D9M-LD-dJf"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
+                        </subviews>
+                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                        <viewLayoutGuide key="safeArea" id="wu6-TO-1qx"/>
+                    </view>
+                    <connections>
+                        <outlet property="buttonBoost" destination="SNd-FK-seq" id="TYh-CR-Qed"/>
+                        <outlet property="buttonGetFreq" destination="MK7-NI-CcX" id="eXW-eC-8Br"/>
+                        <outlet property="segControlNumCores" destination="IrO-WT-hl4" id="Ied-l7-N87"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+        </scene>
+    </scenes>
+</document>
